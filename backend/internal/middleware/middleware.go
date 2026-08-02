@@ -1,0 +1,14 @@
+package middleware
+
+import (
+	"log"
+	"net/http"
+)
+
+// Logging is a middleware that logs the incoming HTTP requests.
+func Logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
+		next.ServeHTTP(w, r)
+	})
+}	
