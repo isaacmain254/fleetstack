@@ -22,6 +22,12 @@ func main() {
 	}
 	defer db.Close()
 
+	// run migrations after establishing the database connection
+	// err = database.RunMigrations(os.Getenv("DATABASE_URL"))
+	// if err != nil {
+	// 	log.Fatalf("failed to run migrations: %v", err)
+	// }
+
 	router := api.NewRouter(db)
 	log.Fatal(http.ListenAndServe(":8080", router))
 
