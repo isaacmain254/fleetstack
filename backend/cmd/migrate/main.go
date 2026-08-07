@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/isaacmain254/fleetstack/backend/internal/config"
 	"github.com/isaacmain254/fleetstack/backend/internal/database"
 )
 
 func main() {
+	conf := config.Load()
 	if len(os.Args) < 2 {
 		fmt.Println("usage:")
 		fmt.Println("create <migration_name>")
@@ -31,9 +33,14 @@ func main() {
 
 	case "up":
 
-		dbURL := os.Getenv("DATABASE_URL")
+		err := database.RunMigrations(conf.DatabaseURL.URL)
+		if err != nil {
+			panic(err)
+		}
 
-		err := database.RunMigrations(dbURL)
+	case "down":
+
+		err := database.RunDownMigrations(conf.DatabaseURL.URL)
 		if err != nil {
 			panic(err)
 		}

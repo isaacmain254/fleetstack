@@ -8,6 +8,7 @@ import (
 	"github.com/isaacmain254/fleetstack/backend/internal/api"
 	"github.com/isaacmain254/fleetstack/backend/internal/config"
 	"github.com/isaacmain254/fleetstack/backend/internal/database"
+	// "github.com/isaacmain254/fleetstack/backend/internal/tools"
 )
 
 
@@ -27,7 +28,10 @@ func main() {
 	// if err != nil {
 	// 	log.Fatalf("failed to run migrations: %v", err)
 	// }
-
+	// _, err = tools.RailpackBuild("/home/cursor/.fleetstack/projects/my-website")
+	// if err != nil {
+	// 	log.Fatalf("failed to build project with railpack: %v", err)
+	// }
 	router := api.NewRouter(db)
 	log.Fatal(http.ListenAndServe(":8080", router))
 

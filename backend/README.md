@@ -1,9 +1,9 @@
 # Create your first migration
 
-To create your first migration, you can use the following command:
+To create your first migration, you can use the following command at the root of your project:
 
 ```bash
-go run cmd/migrate/main.go create <name-of-migration>
+make migrate-create name=create_users
 ```
 
 Output
@@ -17,17 +17,10 @@ migrations/
 
 ## Run migrations
 ```bash 
-go run cmd/migrate/main.go up
+make migrate-up
 ```
 
-other imortant commands
-
+## Run down migrations
 ```bash
-go run cmd/migrate/main.go up
-
-go run cmd/migrate/main.go down
-
-go run cmd/migrate/main.go version
-
-go run cmd/migrate/main.go force 5
+make migrate-down
 ```

@@ -12,8 +12,9 @@ import (
 type Config struct {
 	GitHub   GitHubConfig
 	Database DatabaseConfig
-	Server   ServerConfig
-	Docker   DockerConfig
+	Server      ServerConfig
+	Docker      DockerConfig
+	DatabaseURL DatabaseURL
 }
 
 type GitHubConfig struct {
@@ -39,6 +40,10 @@ type ServerConfig struct {
 
 type DockerConfig struct {
 	Socket string
+}
+
+type DatabaseURL struct {
+	URL string
 }
 
 func Load() *Config {
@@ -70,6 +75,11 @@ func Load() *Config {
 		Docker: DockerConfig{
 			Socket: getEnv("DOCKER_HOST", "unix:///var/run/docker.sock"),
 		},
+
+		DatabaseURL: DatabaseURL{
+			URL: getEnv("DATABASE_URL", "postgresql://fleetstack_user:fleetstack_password@localhost:5432/fleetstack_platform?sslmode=disable"),
+		},
+
 	}
 }
 

@@ -1,7 +1,12 @@
 # .PHONY: dev backend web-app
 
-dev:
+dev-up:
+	@echo "Starting docker containers..."
 	docker compose -f docker-compose.yml up --build
+
+dev-down:
+	@echo "Stopping docker containers..."
+	docker compose -f docker-compose.yml down
 
 run:
 	@echo "Starting backend server..."

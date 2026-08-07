@@ -18,7 +18,7 @@ import (
 	"golang.org/x/oauth2/github"
 
 	"github.com/isaacmain254/fleetstack/backend/internal/config"
-	"github.com/isaacmain254/fleetstack/backend/internal/nixpacks"
+	"github.com/isaacmain254/fleetstack/backend/internal/tools"
 )
 
 type Handler struct{}
@@ -165,11 +165,13 @@ func cloneRepo(repoURL string) (string, error) {
 
 	// fmt.Println(string(output))
 	// fmt.Println(err)
-
+	fmt.Println("Running nixpacks plan on cloned repository...")
+	fmt.Println("Clone path:", clonePath)
 	// return string(output), nil
-	output, err := nixpacks.NixPacksPlan(clonePath)
+	// output, err := tools.NixPacksBuild(clonePath)
+	output,  err := tools.RailpackBuild(clonePath)
 	if err != nil {
-		log.Printf("unable to run nixpacks plan: %v", err)
+		log.Printf("unable to run nixpacks build: %v", err)
 		return "", err
 	}
 

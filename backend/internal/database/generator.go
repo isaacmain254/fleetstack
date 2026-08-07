@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// CreateMigration creates a new migration file with the given name in the migrations directory.
 func CreateMigration(name string) error {
 	name = strings.ReplaceAll(name, " ", "_")
 
