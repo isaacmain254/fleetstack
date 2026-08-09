@@ -8,9 +8,3 @@ CREATE TABLE IF NOT EXISTS projects (
   clone_path TEXT NOT NULL DEFAULT '/home/cursor/.fleetstack/projects/',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
--- INSERT INTO projects (name, repo_url)
--- VALUES
---   ('FleetStack Web', 'https://github.com/example/fleetstack-web'),
---   ('FleetStack API', 'https://github.com/example/fleetstack-api')
--- ON CONFLICT (repo_url) DO NOTHING;

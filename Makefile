@@ -2,7 +2,7 @@
 
 dev-up:
 	@echo "Starting docker containers..."
-	docker compose -f docker-compose.yml up --build
+	docker compose -f docker-compose.yml up -d --build
 
 dev-down:
 	@echo "Stopping docker containers..."
@@ -15,6 +15,10 @@ run:
 build:
 	@echo "Building backend server..."
 	cd backend && go build -o ./bin/main ./cmd/api/main.go
+
+worker:
+	@echo "Starting deployment worker..."
+	cd backend && go run ./cmd/worker/main.go
 
 migrate-up:
 	@echo "Running database migrations up..."

@@ -33,6 +33,9 @@ func NewRouter(db *sql.DB) *mux.Router {
 	// api.HandleFunc("/projects/{id}", projectsHandler.UpdateProjectHandler).Methods("PUT")
 	// api.HandleFunc("/projects/{id}", projectsHandler.DeleteProjectHandler).Methods("DELETE")
 
+	// Deployments routes
+	api.HandleFunc("/projects/{id}/deploy", projectsHandler.DeployProjectHandler).Methods("POST")
+
 	r.Use(middleware.Logging)
 
 	log.Println("Starting server on :8080")
