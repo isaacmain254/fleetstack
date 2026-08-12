@@ -7,9 +7,10 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
+
+	// "os"
 	"os/exec"
-	"path/filepath"
+	// "path/filepath"
 	"strings"
 	"time"
 
@@ -239,10 +240,23 @@ func (h *Handler) DeployProjectHandler(w http.ResponseWriter, r *http.Request) {
 	status := normalizeDeploymentStatus(input.Status)
 
 	query := `INSERT INTO deployments (project_id, status, commit_sha, image_name, container_id, started_at, finished_at) 
-	          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, created_at`
+	          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, created_at, started_at`
 
 	var deploymentID int
 	var createdAt string
+	var startedAt string
+
+	if input.StartedAt == "" {
+		input.StartedAt = time.Now().Format(time.RFC3339)
+	}
+
+	if input.FinishedAt == "" {
+		input.FinishedAt = time.Now().Format(time.RFC3339)
+	}
+
+	if input.CommitSha == "" {
+		input.CommitSha = "default-commit-sha" // You can replace this with actual logic to fetch the latest commit SHA if needed.
+	}
 
 	err = h.db.QueryRow(
 		query,
@@ -253,7 +267,7 @@ func (h *Handler) DeployProjectHandler(w http.ResponseWriter, r *http.Request) {
 		input.ContainerID,
 		input.StartedAt,
 		input.FinishedAt,
-	).Scan(&deploymentID, &createdAt)
+	).Scan(&deploymentID, &createdAt, &startedAt)
 
 	if err != nil {
 		http.Error(w, "failed to create deployment: "+err.Error(), http.StatusInternalServerError)
@@ -267,7 +281,7 @@ func (h *Handler) DeployProjectHandler(w http.ResponseWriter, r *http.Request) {
 		CommitSha:   input.CommitSha,
 		ImageName:   input.ImageName,
 		ContainerID: input.ContainerID,
-		StartedAt:   input.StartedAt,
+		StartedAt:   startedAt,
 		FinishedAt:  input.FinishedAt,
 		CreatedAt:   createdAt,
 	}
@@ -340,30 +354,42 @@ func (h *Handler) processDeployment(deployment *Deployment) error {
 	}
 
 	projectPath := project.ClonePath
-	if projectPath == "" {
-		projectPath = filepath.Join(os.Getenv("HOME"), ".fleetstack", "projects", slugify(project.Name))
-	}
-	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
-		if mkdirErr := os.MkdirAll(projectPath, 0o755); mkdirErr != nil {
-			return fmt.Errorf("create project path: %w", mkdirErr)
-		}
-	}
+	fmt.Printf("Processing deployment %d for project %s at path %s\n", deployment.ID, project.Name, projectPath)
+	// if projectPath == "" {
+	// 	projectPath = filepath.Join(os.Getenv("HOME"), ".fleetstack", "projects", slugify(project.Name))
+	// }
+	// if _, err := os.Stat(projectPath); os.IsNotExist(err) {
+	// 	if mkdirErr := os.MkdirAll(projectPath, 0o755); mkdirErr != nil {
+	// 		return fmt.Errorf("create project path: %w", mkdirErr)
+	// 	}
+	// }
 
-	if _, err := tools.RailpackBuild(projectPath); err != nil {
-		if updateErr := h.updateDeploymentStatus(deployment.ID, StatusFailed, "", ""); updateErr != nil {
-			log.Printf("failed to update deployment %d after build failure: %v", deployment.ID, updateErr)
-		}
-		return fmt.Errorf("railpack build: %w", err)
-	}
-
-	if err := h.updateDeploymentStatus(deployment.ID, StatusDeploying, "", ""); err != nil {
-		return fmt.Errorf("update deployment status to deploying: %w", err)
-	}
-
+	log.Printf("starting build for deployment %d at %s", deployment.ID, projectPath)
 	imageName := deployment.ImageName
 	if imageName == "" {
 		imageName = fmt.Sprintf("fleetstack/%s:%d", slugify(project.Name), deployment.ID)
 	}
+	buildOutput, builtImage, err := tools.RailpackBuild(projectPath, imageName)
+	if err != nil {
+		if updateErr := h.updateDeploymentStatus(deployment.ID, StatusFailed, imageName, ""); updateErr != nil {
+			log.Printf("failed to update deployment %d after build failure: %v", deployment.ID, updateErr)
+		}
+		trimmed := strings.TrimSpace(string(buildOutput))
+		if trimmed == "" {
+			return fmt.Errorf("railpack build: %w", err)
+		}
+		return fmt.Errorf("railpack build: %w\nrailpack output:\n%s", err, trimmed)
+	}
+	if builtImage != "" {
+		imageName = builtImage
+	}
+	log.Printf("build produced image %s for deployment %d", imageName, deployment.ID)
+	log.Printf("build finished for deployment %d", deployment.ID)
+
+	if err := h.updateDeploymentStatus(deployment.ID, StatusDeploying, imageName, ""); err != nil {
+		return fmt.Errorf("update deployment status to deploying: %w", err)
+	}
+
 	containerName := fmt.Sprintf("fleetstack-%s-%d", slugify(project.Name), deployment.ID)
 	cmd := exec.Command("docker", "run", "-d", "--name", containerName, imageName)
 	output, err := cmd.CombinedOutput()

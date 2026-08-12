@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"time"
 	"os/exec"
 	"path"
 	"path/filepath"
+	"time"
 
 	"fmt"
 	"io"
@@ -34,7 +34,6 @@ func (h *Handler) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	callbackHandler(w, r)
 }
-
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
@@ -80,7 +79,6 @@ func getRedirectURL() string {
 	return authURL
 }
 
-
 func getCurrentUserRepo(accessToken string) ([]*gogithub.Repository, error) {
 	log.Printf("Access Token: %s", accessToken)
 	client, err := gogithub.NewClient(gogithub.WithAuthToken(accessToken))
@@ -98,7 +96,6 @@ func getCurrentUserRepo(accessToken string) ([]*gogithub.Repository, error) {
 	}
 	return repos, nil
 }
-
 
 func (h *Handler) CloneRepoHandler(w http.ResponseWriter, r *http.Request) {
 	repoURL := r.FormValue("repo_url")
@@ -169,7 +166,7 @@ func cloneRepo(repoURL string) (string, error) {
 	fmt.Println("Clone path:", clonePath)
 	// return string(output), nil
 	// output, err := tools.NixPacksBuild(clonePath)
-	output,  err := tools.RailpackBuild(clonePath)
+	output, _, err := tools.RailpackBuild(clonePath, "")
 	if err != nil {
 		log.Printf("unable to run nixpacks build: %v", err)
 		return "", err
